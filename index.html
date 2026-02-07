@@ -130,6 +130,19 @@
             color: white;
         }
         
+        .day-box.test-day {
+            background: #ffd700;
+            border-color: #ffa500;
+            color: #744210;
+            font-weight: bold;
+        }
+        
+        .day-box.test-day.completed {
+            background: #48bb78;
+            border-color: #2f855a;
+            color: white;
+        }
+        
         .day-label {
             font-size: 0.8em;
             font-weight: 600;
@@ -217,6 +230,121 @@
             margin-top: 5px;
             font-size: 0.9em;
         }
+
+        /* Test Day Styles */
+        .test-day-section {
+            background: linear-gradient(135deg, #ffd700 0%, #ffa500 100%);
+            padding: 25px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            color: #744210;
+        }
+        
+        .test-day-section h2 {
+            margin-bottom: 15px;
+        }
+        
+        .test-input-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+        
+        .test-input-item {
+            background: white;
+            padding: 15px;
+            border-radius: 10px;
+        }
+        
+        .test-input-item label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #2d3748;
+        }
+        
+        .test-input-item input {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 1.1em;
+            text-align: center;
+        }
+        
+        .test-input-item input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .save-test-btn {
+            background: #48bb78;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 10px;
+            font-size: 1.1em;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 15px;
+            transition: all 0.3s;
+        }
+        
+        .save-test-btn:hover {
+            background: #38a169;
+            transform: translateY(-2px);
+        }
+        
+        .progress-table {
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+            margin-top: 20px;
+        }
+        
+        .progress-table table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        .progress-table th {
+            background: #f7fafc;
+            padding: 12px;
+            text-align: left;
+            font-weight: 600;
+            color: #2d3748;
+            border-bottom: 2px solid #e2e8f0;
+        }
+        
+        .progress-table td {
+            padding: 12px;
+            border-bottom: 1px solid #e2e8f0;
+            color: #4a5568;
+        }
+        
+        .progress-table tr:last-child td {
+            border-bottom: none;
+        }
+        
+        .improvement {
+            color: #48bb78;
+            font-weight: 600;
+        }
+        
+        .decline {
+            color: #f56565;
+        }
+        
+        .pr-badge {
+            background: #ffd700;
+            color: #744210;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 0.8em;
+            font-weight: 600;
+            margin-left: 5px;
+        }
     </style>
 </head>
 <body>
@@ -259,8 +387,47 @@
         
         <div class="tracker-section" style="margin-top: 40px;">
             <h2 style="margin-bottom: 15px;">Exercise Tracker - Daily Workouts</h2>
-            <p style="color: #718096; margin-bottom: 15px;">Alternate between lower body (knee strengthening) and upper body days. Aim for 6-7 days per week!</p>
+            <p style="color: #718096; margin-bottom: 15px;">Alternate between lower body (knee strengthening) and upper body days. Saturdays are TEST DAYS! 🏆</p>
             <div class="tracker-grid" id="exerciseGrid"></div>
+        </div>
+        
+        <!-- Test Day Section -->
+        <div class="test-day-section" id="testDaySection" style="display: none;">
+            <h2>🏆 Saturday Test Day - Week <span id="testWeekNumber">1</span></h2>
+            <p style="margin-bottom: 20px;">Record your max reps/time for each exercise. This is your baseline for tracking progress!</p>
+            
+            <div class="test-input-grid">
+                <div class="test-input-item">
+                    <label>Push-ups (max reps)</label>
+                    <input type="number" id="test-pushups" min="0" placeholder="0">
+                </div>
+                <div class="test-input-item">
+                    <label>Wall Sit (seconds)</label>
+                    <input type="number" id="test-wallsit" min="0" placeholder="0">
+                </div>
+                <div class="test-input-item">
+                    <label>Glute Bridges (max reps)</label>
+                    <input type="number" id="test-bridges" min="0" placeholder="0">
+                </div>
+                <div class="test-input-item">
+                    <label>Plank (seconds)</label>
+                    <input type="number" id="test-plank" min="0" placeholder="0">
+                </div>
+                <div class="test-input-item">
+                    <label>Goblet Squats (max reps)</label>
+                    <input type="number" id="test-squats" min="0" placeholder="0">
+                </div>
+                <div class="test-input-item">
+                    <label>Balance - Eyes Closed (avg seconds)</label>
+                    <input type="number" id="test-balance" min="0" placeholder="0">
+                </div>
+            </div>
+            
+            <button class="save-test-btn" onclick="saveTestResults()">💾 Save Test Results</button>
+            
+            <div class="progress-table" id="progressTable">
+                <!-- Progress table will be inserted here -->
+            </div>
         </div>
         
         <div class="goals-section" style="margin-top: 30px;" id="workoutPlan">
@@ -274,10 +441,19 @@
     </div>
     
     <script>
+        const testExercises = [
+            { id: 'pushups', name: 'Push-ups', unit: 'reps' },
+            { id: 'wallsit', name: 'Wall Sit', unit: 'sec' },
+            { id: 'bridges', name: 'Glute Bridges', unit: 'reps' },
+            { id: 'plank', name: 'Plank Hold', unit: 'sec' },
+            { id: 'squats', name: 'Goblet Squats', unit: 'reps' },
+            { id: 'balance', name: 'Balance (eyes closed)', unit: 'sec' }
+        ];
+        
         const workouts = {
             1: {
                 title: "Week 1: Building the Foundation",
-                schedule: "Lower → Upper → Lower → Upper → Lower → Upper → Active Recovery",
+                schedule: "TEST → Lower → Upper → Lower → Upper → Lower → Recovery",
                 lower: {
                     title: "LOWER BODY - Knee Rehab Focus",
                     warmup: "🏋️ Warm-up (5 mins): Cat-cow (10) • Ankle circles (10 each) • Leg swings (10 each) • Hip circles (10 each)",
@@ -317,7 +493,7 @@
             },
             2: {
                 title: "Week 2: Adding Intensity",
-                schedule: "Lower → Upper → Lower → Upper → Lower → Upper → Active Recovery",
+                schedule: "TEST → Lower → Upper → Lower → Upper → Lower → Recovery",
                 lower: {
                     title: "LOWER BODY - Progression",
                     warmup: "🏋️ Warm-up (5 mins): Cat-cow (10) • Ankle circles (10 each) • Dynamic leg swings all directions (10 each) • Hip circles (10 each) • 10 bodyweight squats",
@@ -357,7 +533,7 @@
             },
             3: {
                 title: "Week 3: Building Strength",
-                schedule: "Lower → Upper → Lower → Upper → Lower → Upper → Active Recovery",
+                schedule: "TEST → Lower → Upper → Lower → Upper → Lower → Recovery",
                 lower: {
                     title: "LOWER BODY - Getting Strong",
                     warmup: "🏋️ Warm-up (6 mins): Full mobility flow + 10 squats + 5 lunges each side",
@@ -397,7 +573,7 @@
             },
             4: {
                 title: "Week 4: Peak Performance",
-                schedule: "Lower → Upper → Lower → Upper → Lower → Upper → Active Recovery",
+                schedule: "TEST → Lower → Upper → Lower → Upper → Lower → Recovery",
                 lower: {
                     title: "LOWER BODY - Beast Mode",
                     warmup: "🏋️ Warm-up (6 mins): Full dynamic warm-up + activation exercises",
@@ -535,6 +711,7 @@
         let currentWeek = 1;
         let completedDays = JSON.parse(localStorage.getItem('completedDays') || '{}');
         let exerciseDays = JSON.parse(localStorage.getItem('exerciseDays') || '{}');
+        let testResults = JSON.parse(localStorage.getItem('testResults') || '{}');
         
         function showWeek(week) {
             currentWeek = week;
@@ -564,91 +741,7 @@
             renderExerciseTracker();
             renderWorkoutPlan();
             updateStats();
-        }
-        
-        function renderWorkoutPlan() {
-            const workout = workouts[currentWeek];
-            const planEl = document.getElementById('workoutPlan');
-            
-            let lowerHTML = '';
-            workout.lower.exercises.forEach((ex, i) => {
-                lowerHTML += `<strong>${i + 1}. ${ex.name}</strong> (${ex.reps})<br>${ex.notes}<br><br>`;
-            });
-            
-            let upperHTML = '';
-            workout.upper.exercises.forEach((ex, i) => {
-                upperHTML += `<strong>${i + 1}. ${ex.name}</strong> (${ex.reps})<br>${ex.notes}<br><br>`;
-            });
-            
-            let recoveryHTML = '';
-            workout.recovery.exercises.forEach((ex, i) => {
-                recoveryHTML += `<strong>${i + 1}. ${ex.name}</strong> (${ex.reps})<br>${ex.notes}<br><br>`;
-            });
-            
-            planEl.innerHTML = `
-                <h2 style="margin-bottom: 10px;">${workout.title}</h2>
-                <p style="color: #718096; margin-bottom: 25px; font-size: 1.1em;"><strong>Weekly Schedule:</strong> ${workout.schedule}</p>
-                
-                <div class="goal-item" style="border-left-color: #48bb78;">
-                    <h3>💪 ${workout.lower.title}</h3>
-                    <p><em>Days 1, 3, 5 (Sat, Mon, Wed)</em></p>
-                    <p style="margin-top: 15px;"><strong>Warm-up:</strong> ${workout.lower.warmup}</p>
-                    <p style="margin-top: 10px;"><strong>Workout:</strong> ${workout.lower.circuit}</p>
-                    <p style="margin-top: 15px;">${lowerHTML}</p>
-                    <p><strong>Cool-down:</strong> ${workout.lower.cooldown}</p>
-                </div>
-                
-                <div class="goal-item" style="border-left-color: #667eea;">
-                    <h3>💪 ${workout.upper.title}</h3>
-                    <p><em>Days 2, 4, 6 (Sun, Tue, Thu)</em></p>
-                    <p style="margin-top: 15px;"><strong>Warm-up:</strong> ${workout.upper.warmup}</p>
-                    <p style="margin-top: 10px;"><strong>Workout:</strong> ${workout.upper.circuit}</p>
-                    <p style="margin-top: 15px;">${upperHTML}</p>
-                    <p><strong>Cool-down:</strong> ${workout.upper.cooldown}</p>
-                </div>
-                
-                <div class="goal-item" style="border-left-color: #ed8936;">
-                    <h3>🧘 ${workout.recovery.title}</h3>
-                    <p><em>Day 7 (Friday) - Let your body repair!</em></p>
-                    <p style="margin-top: 15px;">${recoveryHTML}</p>
-                </div>
-                
-                <div class="goal-item" style="border-left-color: #f56565; background: #fff5f5;">
-                    <h3>⚠️ Training Smart</h3>
-                    <p>• <strong>Knee pain?</strong> Sharp pain = stop immediately. Dull burn = normal muscle fatigue<br>
-                    • <strong>Form over reps:</strong> Better to do 8 perfect reps than 15 sloppy ones<br>
-                    • <strong>Listen to your body:</strong> Sore is OK. Injured is not. Take an extra rest day if needed<br>
-                    • <strong>Fuel properly:</strong> Eat enough protein and sleep well - that's when you get stronger<br>
-                    • <strong>Progressive overload:</strong> Only move to next week when current week feels manageable</p>
-                </div>
-            `;
-        }
-        
-        function renderExerciseTracker() {
-            const grid = document.getElementById('exerciseGrid');
-            const days = ['Sat', 'Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri'];
-            
-            grid.innerHTML = days.map((day, index) => {
-                const dayKey = `week${currentWeek}-exercise${index + 1}`;
-                const isCompleted = exerciseDays[dayKey];
-                
-                return `
-                    <div class="day-box ${isCompleted ? 'completed' : ''}" onclick="toggleExercise('${dayKey}')">
-                        <div class="day-label">${day}</div>
-                        <div class="day-number">${index + 1}</div>
-                    </div>
-                `;
-            }).join('');
-        }
-        
-        function toggleExercise(dayKey) {
-            if (exerciseDays[dayKey]) {
-                delete exerciseDays[dayKey];
-            } else {
-                exerciseDays[dayKey] = true;
-            }
-            localStorage.setItem('exerciseDays', JSON.stringify(exerciseDays));
-            renderExerciseTracker();
+            checkTestDay();
         }
         
         function renderTracker() {
@@ -677,6 +770,212 @@
             localStorage.setItem('completedDays', JSON.stringify(completedDays));
             renderTracker();
             updateStats();
+        }
+        
+        function renderExerciseTracker() {
+            const grid = document.getElementById('exerciseGrid');
+            const days = ['Sat', 'Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri'];
+            
+            grid.innerHTML = days.map((day, index) => {
+                const dayKey = `week${currentWeek}-exercise${index + 1}`;
+                const isCompleted = exerciseDays[dayKey];
+                const isTestDay = index === 0; // Saturday
+                
+                return `
+                    <div class="day-box ${isTestDay ? 'test-day' : ''} ${isCompleted ? 'completed' : ''}" onclick="toggleExercise('${dayKey}', ${index === 0})">
+                        <div class="day-label">${day}${isTestDay ? ' 🏆' : ''}</div>
+                        <div class="day-number">${index + 1}</div>
+                    </div>
+                `;
+            }).join('');
+        }
+        
+        function toggleExercise(dayKey, isTestDay) {
+            if (exerciseDays[dayKey]) {
+                delete exerciseDays[dayKey];
+            } else {
+                exerciseDays[dayKey] = true;
+            }
+            localStorage.setItem('exerciseDays', JSON.stringify(exerciseDays));
+            renderExerciseTracker();
+            
+            if (isTestDay) {
+                showTestDay();
+            }
+        }
+        
+        function checkTestDay() {
+            const testDayKey = `week${currentWeek}-exercise1`;
+            if (exerciseDays[testDayKey]) {
+                showTestDay();
+            } else {
+                document.getElementById('testDaySection').style.display = 'none';
+            }
+        }
+        
+        function showTestDay() {
+            const testSection = document.getElementById('testDaySection');
+            testSection.style.display = 'block';
+            document.getElementById('testWeekNumber').textContent = currentWeek;
+            
+            // Load existing test results for this week if they exist
+            const weekKey = `week${currentWeek}`;
+            if (testResults[weekKey]) {
+                const results = testResults[weekKey];
+                document.getElementById('test-pushups').value = results.pushups || '';
+                document.getElementById('test-wallsit').value = results.wallsit || '';
+                document.getElementById('test-bridges').value = results.bridges || '';
+                document.getElementById('test-plank').value = results.plank || '';
+                document.getElementById('test-squats').value = results.squats || '';
+                document.getElementById('test-balance').value = results.balance || '';
+            } else {
+                // Clear inputs
+                document.getElementById('test-pushups').value = '';
+                document.getElementById('test-wallsit').value = '';
+                document.getElementById('test-bridges').value = '';
+                document.getElementById('test-plank').value = '';
+                document.getElementById('test-squats').value = '';
+                document.getElementById('test-balance').value = '';
+            }
+            
+            renderProgressTable();
+        }
+        
+        function saveTestResults() {
+            const weekKey = `week${currentWeek}`;
+            testResults[weekKey] = {
+                pushups: parseInt(document.getElementById('test-pushups').value) || 0,
+                wallsit: parseInt(document.getElementById('test-wallsit').value) || 0,
+                bridges: parseInt(document.getElementById('test-bridges').value) || 0,
+                plank: parseInt(document.getElementById('test-plank').value) || 0,
+                squats: parseInt(document.getElementById('test-squats').value) || 0,
+                balance: parseInt(document.getElementById('test-balance').value) || 0
+            };
+            
+            localStorage.setItem('testResults', JSON.stringify(testResults));
+            renderProgressTable();
+            alert('✅ Test results saved! Keep crushing it!');
+        }
+        
+        function renderProgressTable() {
+            const tableContainer = document.getElementById('progressTable');
+            
+            if (Object.keys(testResults).length === 0) {
+                tableContainer.innerHTML = '<p style="text-align: center; padding: 20px; color: #744210;">Complete your first test to see progress tracking!</p>';
+                return;
+            }
+            
+            let tableHTML = '<table><thead><tr><th>Exercise</th>';
+            
+            // Add column headers for each week that has data
+            for (let w = 1; w <= 4; w++) {
+                if (testResults[`week${w}`]) {
+                    tableHTML += `<th>Week ${w}</th>`;
+                }
+            }
+            tableHTML += '<th>Change</th></tr></thead><tbody>';
+            
+            // Add rows for each exercise
+            testExercises.forEach(exercise => {
+                tableHTML += `<tr><td><strong>${exercise.name}</strong></td>`;
+                
+                let values = [];
+                for (let w = 1; w <= 4; w++) {
+                    const weekKey = `week${w}`;
+                    if (testResults[weekKey]) {
+                        const val = testResults[weekKey][exercise.id];
+                        values.push(val);
+                        
+                        // Check if this is a personal record
+                        const isPR = val > 0 && values.every(v => val >= v);
+                        const prBadge = isPR && values.length > 1 ? '<span class="pr-badge">PR</span>' : '';
+                        
+                        tableHTML += `<td>${val} ${exercise.unit}${prBadge}</td>`;
+                    }
+                }
+                
+                // Calculate improvement
+                if (values.length > 1) {
+                    const first = values[0];
+                    const last = values[values.length - 1];
+                    const change = last - first;
+                    const percent = first > 0 ? Math.round((change / first) * 100) : 0;
+                    const changeClass = change > 0 ? 'improvement' : (change < 0 ? 'decline' : '');
+                    const arrow = change > 0 ? '↑' : (change < 0 ? '↓' : '→');
+                    tableHTML += `<td class="${changeClass}">${arrow} ${change > 0 ? '+' : ''}${change} (${percent > 0 ? '+' : ''}${percent}%)</td>`;
+                } else {
+                    tableHTML += '<td>-</td>';
+                }
+                
+                tableHTML += '</tr>';
+            });
+            
+            tableHTML += '</tbody></table>';
+            tableContainer.innerHTML = tableHTML;
+        }
+        
+        function renderWorkoutPlan() {
+            const workout = workouts[currentWeek];
+            const planEl = document.getElementById('workoutPlan');
+            
+            let lowerHTML = '';
+            workout.lower.exercises.forEach((ex, i) => {
+                lowerHTML += `<strong>${i + 1}. ${ex.name}</strong> (${ex.reps})<br>${ex.notes}<br><br>`;
+            });
+            
+            let upperHTML = '';
+            workout.upper.exercises.forEach((ex, i) => {
+                upperHTML += `<strong>${i + 1}. ${ex.name}</strong> (${ex.reps})<br>${ex.notes}<br><br>`;
+            });
+            
+            let recoveryHTML = '';
+            workout.recovery.exercises.forEach((ex, i) => {
+                recoveryHTML += `<strong>${i + 1}. ${ex.name}</strong> (${ex.reps})<br>${ex.notes}<br><br>`;
+            });
+            
+            planEl.innerHTML = `
+                <h2 style="margin-bottom: 10px;">${workout.title}</h2>
+                <p style="color: #718096; margin-bottom: 25px; font-size: 1.1em;"><strong>Weekly Schedule:</strong> ${workout.schedule}</p>
+                
+                <div class="goal-item" style="border-left-color: #ffa500; background: #fffaf0;">
+                    <h3>🏆 SATURDAY - TEST DAY</h3>
+                    <p><em>Record your baseline and track progress!</em></p>
+                    <p style="margin-top: 15px;">Perform max reps/time for: Push-ups, Wall Sit, Glute Bridges, Plank, Goblet Squats, and Balance (eyes closed). Check the Saturday box in Exercise Tracker to log your results!</p>
+                </div>
+                
+                <div class="goal-item" style="border-left-color: #48bb78;">
+                    <h3>💪 ${workout.lower.title}</h3>
+                    <p><em>Days 2, 4, 6 (Sun, Tue, Thu) - 3x per week for knee strength!</em></p>
+                    <p style="margin-top: 15px;"><strong>Warm-up:</strong> ${workout.lower.warmup}</p>
+                    <p style="margin-top: 10px;"><strong>Workout:</strong> ${workout.lower.circuit}</p>
+                    <p style="margin-top: 15px;">${lowerHTML}</p>
+                    <p><strong>Cool-down:</strong> ${workout.lower.cooldown}</p>
+                </div>
+                
+                <div class="goal-item" style="border-left-color: #667eea;">
+                    <h3>💪 ${workout.upper.title}</h3>
+                    <p><em>Days 3, 5 (Mon, Wed) - 2x per week upper body</em></p>
+                    <p style="margin-top: 15px;"><strong>Warm-up:</strong> ${workout.upper.warmup}</p>
+                    <p style="margin-top: 10px;"><strong>Workout:</strong> ${workout.upper.circuit}</p>
+                    <p style="margin-top: 15px;">${upperHTML}</p>
+                    <p><strong>Cool-down:</strong> ${workout.upper.cooldown}</p>
+                </div>
+                
+                <div class="goal-item" style="border-left-color: #ed8936;">
+                    <h3>🧘 ${workout.recovery.title}</h3>
+                    <p><em>Day 7 (Friday) - Let your body repair!</em></p>
+                    <p style="margin-top: 15px;">${recoveryHTML}</p>
+                </div>
+                
+                <div class="goal-item" style="border-left-color: #f56565; background: #fff5f5;">
+                    <h3>⚠️ Training Smart</h3>
+                    <p>• <strong>Knee pain?</strong> Sharp pain = stop immediately. Dull burn = normal muscle fatigue<br>
+                    • <strong>Form over reps:</strong> Better to do 8 perfect reps than 15 sloppy ones<br>
+                    • <strong>Listen to your body:</strong> Sore is OK. Injured is not. Take an extra rest day if needed<br>
+                    • <strong>Fuel properly:</strong> Eat enough protein and sleep well - that's when you get stronger<br>
+                    • <strong>Progressive overload:</strong> Only move to next week when current week feels manageable</p>
+                </div>
+            `;
         }
         
         function updateStats() {
