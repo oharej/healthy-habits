@@ -1,0 +1,713 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🍵 Break the Caffeine-Sleep Cycle</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🍵</text></svg>">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        
+        h1 {
+            color: #2d3748;
+            margin-bottom: 10px;
+            font-size: 2em;
+        }
+        
+        .subtitle {
+            color: #718096;
+            margin-bottom: 30px;
+            font-size: 1.1em;
+        }
+        
+        .week-selector {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+        
+        .week-btn {
+            padding: 12px 24px;
+            border: 2px solid #e2e8f0;
+            background: white;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 1em;
+            font-weight: 600;
+        }
+        
+        .week-btn:hover {
+            border-color: #667eea;
+            transform: translateY(-2px);
+        }
+        
+        .week-btn.active {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+        
+        .goals-section {
+            background: #f7fafc;
+            padding: 25px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+        }
+        
+        .goal-item {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 15px;
+            border-left: 4px solid #667eea;
+        }
+        
+        .goal-item h3 {
+            color: #2d3748;
+            margin-bottom: 8px;
+            font-size: 1.1em;
+        }
+        
+        .goal-item p {
+            color: #4a5568;
+            line-height: 1.6;
+        }
+        
+        .tracker-section {
+            margin-bottom: 30px;
+        }
+        
+        .tracker-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 10px;
+            margin-top: 15px;
+        }
+        
+        .day-box {
+            aspect-ratio: 1;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: white;
+        }
+        
+        .day-box:hover {
+            transform: scale(1.05);
+            border-color: #667eea;
+        }
+        
+        .day-box.completed {
+            background: #48bb78;
+            border-color: #48bb78;
+            color: white;
+        }
+        
+        .day-label {
+            font-size: 0.8em;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+        
+        .day-number {
+            font-size: 1.2em;
+            font-weight: bold;
+        }
+        
+        .tips-section {
+            background: #fff5f5;
+            padding: 25px;
+            border-radius: 15px;
+            border-left: 4px solid #f56565;
+        }
+        
+        .tips-section h3 {
+            color: #c53030;
+            margin-bottom: 15px;
+        }
+        
+        .tips-section ul {
+            list-style: none;
+        }
+        
+        .tips-section li {
+            padding: 10px 0;
+            color: #4a5568;
+            line-height: 1.6;
+            padding-left: 25px;
+            position: relative;
+        }
+        
+        .tips-section li:before {
+            content: "💡";
+            position: absolute;
+            left: 0;
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 30px;
+            background: #e2e8f0;
+            border-radius: 15px;
+            overflow: hidden;
+            margin: 20px 0;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #48bb78 0%, #38a169 100%);
+            transition: width 0.5s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+        }
+        
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+        
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+            border: 2px solid #e2e8f0;
+        }
+        
+        .stat-number {
+            font-size: 2em;
+            font-weight: bold;
+            color: #667eea;
+        }
+        
+        .stat-label {
+            color: #718096;
+            margin-top: 5px;
+            font-size: 0.9em;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🌙 Break the Caffeine-Sleep Cycle</h1>
+        <p class="subtitle">Your 4-week journey to better sleep and sustainable energy</p>
+        
+        <div class="week-selector">
+            <button class="week-btn active" onclick="showWeek(1)">Week 1</button>
+            <button class="week-btn" onclick="showWeek(2)">Week 2</button>
+            <button class="week-btn" onclick="showWeek(3)">Week 3</button>
+            <button class="week-btn" onclick="showWeek(4)">Week 4</button>
+        </div>
+        
+        <div class="progress-bar">
+            <div class="progress-fill" id="progressBar">0%</div>
+        </div>
+        
+        <div class="stats">
+            <div class="stat-card">
+                <div class="stat-number" id="completedDays">0</div>
+                <div class="stat-label">Days Completed</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="currentStreak">0</div>
+                <div class="stat-label">Current Streak</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="weekProgress">0%</div>
+                <div class="stat-label">This Week</div>
+            </div>
+        </div>
+        
+        <div id="weekContent"></div>
+        
+        <div class="tracker-section">
+            <h2 style="margin-bottom: 15px;">Daily Tracker - Sleep & Caffeine</h2>
+            <div class="tracker-grid" id="trackerGrid"></div>
+        </div>
+        
+        <div class="tracker-section" style="margin-top: 40px;">
+            <h2 style="margin-bottom: 15px;">Exercise Tracker - Daily Workouts</h2>
+            <p style="color: #718096; margin-bottom: 15px;">Alternate between lower body (knee strengthening) and upper body days. Aim for 6-7 days per week!</p>
+            <div class="tracker-grid" id="exerciseGrid"></div>
+        </div>
+        
+        <div class="goals-section" style="margin-top: 30px;" id="workoutPlan">
+            <!-- Workout plan will be inserted here by JavaScript -->
+        </div>
+        
+        <div class="tips-section">
+            <h3>Pro Tips for Success</h3>
+            <ul id="weekTips"></ul>
+        </div>
+    </div>
+    
+    <script>
+        const workouts = {
+            1: {
+                title: "Week 1: Building the Foundation",
+                schedule: "Lower → Upper → Lower → Upper → Lower → Upper → Active Recovery",
+                lower: {
+                    title: "LOWER BODY - Knee Rehab Focus",
+                    warmup: "🏋️ Warm-up (5 mins): Cat-cow (10) • Ankle circles (10 each) • Leg swings (10 each) • Hip circles (10 each)",
+                    circuit: "3 rounds • 60 sec rest",
+                    exercises: [
+                        { name: "Glute Bridges", reps: "15 reps", notes: "2 second hold at top. Feel the glute squeeze!" },
+                        { name: "Clamshells", reps: "15 each side", notes: "Control the movement. Hip should burn." },
+                        { name: "KB Deadlifts", reps: "12 reps", notes: "Push hips back, chest proud. Feel hamstrings." },
+                        { name: "Wall Sits", reps: "30 seconds", notes: "Back flat. Thighs parallel to ground." },
+                        { name: "Reverse Lunges", reps: "10 each side", notes: "Step back, controlled descent. No KB yet." },
+                        { name: "Goblet Squats", reps: "10 reps", notes: "Half depth. KB at chest. Knees track over toes." }
+                    ],
+                    cooldown: "🧘 Cool-down (5 mins): Figure-4 (30s each) • Quad stretch (30s each) • Hamstring stretch (30s each) • Child's pose (60s)"
+                },
+                upper: {
+                    title: "UPPER BODY - KB & Bodyweight",
+                    warmup: "🏋️ Warm-up (5 mins): Arm circles (10 each way) • Shoulder rolls (10) • Cat-cow (10) • Wrist circles (10 each)",
+                    circuit: "3 rounds • 45 sec rest",
+                    exercises: [
+                        { name: "KB Floor Press", reps: "12 reps", notes: "Lying on mat. Press KB up with both hands on handle." },
+                        { name: "KB Rows (each arm)", reps: "12 each side", notes: "Hand on mat for support. Pull KB to hip." },
+                        { name: "Push-ups (modified OK)", reps: "10 reps", notes: "Knees down is fine! Full range of motion." },
+                        { name: "KB Overhead Press", reps: "10 reps", notes: "Both hands on KB. Press overhead, control down." },
+                        { name: "Plank Hold", reps: "30 seconds", notes: "Straight line. Squeeze glutes. Breathe!" },
+                        { name: "KB Halos", reps: "10 each direction", notes: "Circle KB around head. Keeps shoulders healthy." }
+                    ],
+                    cooldown: "🧘 Cool-down (5 mins): Thread the needle (30s each) • Chest stretch (30s each) • Tricep stretch (30s each) • Child's pose (60s)"
+                },
+                recovery: {
+                    title: "ACTIVE RECOVERY DAY",
+                    exercises: [
+                        { name: "Gentle yoga or stretching", reps: "20-30 mins", notes: "Focus on areas that feel tight" },
+                        { name: "Easy walk", reps: "20-30 mins", notes: "Just move. No intensity." },
+                        { name: "Foam rolling", reps: "10-15 mins", notes: "Hit quads, glutes, upper back if you have a roller" }
+                    ]
+                }
+            },
+            2: {
+                title: "Week 2: Adding Intensity",
+                schedule: "Lower → Upper → Lower → Upper → Lower → Upper → Active Recovery",
+                lower: {
+                    title: "LOWER BODY - Progression",
+                    warmup: "🏋️ Warm-up (5 mins): Cat-cow (10) • Ankle circles (10 each) • Dynamic leg swings all directions (10 each) • Hip circles (10 each) • 10 bodyweight squats",
+                    circuit: "4 rounds • 60 sec rest",
+                    exercises: [
+                        { name: "Single-leg Glute Bridges", reps: "12 each side", notes: "Other leg extended. Keep hips level!" },
+                        { name: "Clamshells with KB on hip", reps: "15 each side", notes: "Add weight! Control is everything." },
+                        { name: "Single-leg KB Deadlifts", reps: "8 each side", notes: "Kickstand stance (back toe down for balance)." },
+                        { name: "Wall Sits", reps: "40 seconds", notes: "Last 10 seconds add small pulses." },
+                        { name: "KB Reverse Lunges", reps: "10 each side", notes: "KB at chest. Focus on balance." },
+                        { name: "Goblet Squats", reps: "12 reps", notes: "Go deeper if knee allows. 3-2-1 tempo down." }
+                    ],
+                    cooldown: "🧘 Cool-down (5 mins): Figure-4 (40s each) • Quad stretch (40s each) • Hamstring stretch (40s each) • Pigeon pose (30s each)"
+                },
+                upper: {
+                    title: "UPPER BODY - Level Up",
+                    warmup: "🏋️ Warm-up (5 mins): Arm circles (10 each) • Shoulder rolls (10) • 10 light push-ups • Wrist circles (10 each)",
+                    circuit: "4 rounds • 45 sec rest",
+                    exercises: [
+                        { name: "KB Floor Press", reps: "15 reps", notes: "Controlled tempo. Pause at bottom." },
+                        { name: "KB Rows (each arm)", reps: "15 each side", notes: "Pull elbow high. Squeeze shoulder blade." },
+                        { name: "Push-ups", reps: "12 reps", notes: "Try standard if you can. Slow down." },
+                        { name: "KB Overhead Press", reps: "12 reps", notes: "Engage core. Don't arch back." },
+                        { name: "Plank Hold", reps: "40 seconds", notes: "Add shoulder taps if it's too easy (5 each)." },
+                        { name: "KB Halos + Overhead Hold", reps: "8 each + 10s hold", notes: "Circle then hold KB overhead. Shoulder stability!" }
+                    ],
+                    cooldown: "🧘 Cool-down (5 mins): Thread the needle (40s each) • Doorway chest stretch (40s each) • Tricep stretch (40s each)"
+                },
+                recovery: {
+                    title: "ACTIVE RECOVERY DAY",
+                    exercises: [
+                        { name: "Yoga flow", reps: "30 mins", notes: "Sun salutations, downward dogs, warrior poses" },
+                        { name: "Walk or light bike", reps: "30 mins", notes: "Conversational pace only" },
+                        { name: "Full body stretch routine", reps: "15 mins", notes: "Hit everything that's sore" }
+                    ]
+                }
+            },
+            3: {
+                title: "Week 3: Building Strength",
+                schedule: "Lower → Upper → Lower → Upper → Lower → Upper → Active Recovery",
+                lower: {
+                    title: "LOWER BODY - Getting Strong",
+                    warmup: "🏋️ Warm-up (6 mins): Full mobility flow + 10 squats + 5 lunges each side",
+                    circuit: "4 rounds • 50 sec rest",
+                    exercises: [
+                        { name: "Single-leg Glute Bridges", reps: "15 each + 3s hold", notes: "Maximum glute contraction. Squeeze hard!" },
+                        { name: "Lateral Band Walks", reps: "15 steps each way", notes: "Use resistance band or KB for resistance in quarter squat." },
+                        { name: "Single-leg KB Deadlifts", reps: "10 each side", notes: "Float back leg higher. Feel the balance challenge." },
+                        { name: "Bulgarian Split Squats", reps: "10 each side", notes: "Back foot elevated on mat roll. KB at chest." },
+                        { name: "Goblet Squats - Pause", reps: "12 reps", notes: "3 second pause at bottom. Full depth if knee is happy!" },
+                        { name: "Jump Squats (light)", reps: "8 reps", notes: "Only if knee feels 100%. Quarter squat, soft landing." }
+                    ],
+                    cooldown: "🧘 Cool-down (6 mins): Deep stretching + pigeon pose both sides"
+                },
+                upper: {
+                    title: "UPPER BODY - Max Effort",
+                    warmup: "🏋️ Warm-up (6 mins): Dynamic arm swings + 10 push-ups + shoulder mobility",
+                    circuit: "4 rounds • 40 sec rest",
+                    exercises: [
+                        { name: "KB Floor Press - Slow", reps: "15 reps", notes: "4 seconds down, explosive up. Feel the tension." },
+                        { name: "KB Rows (each arm)", reps: "15 each", notes: "Add pause at top. Pull high to armpit." },
+                        { name: "Push-up Variations", reps: "15 reps", notes: "Mix: 5 wide, 5 standard, 5 diamond. Challenge yourself." },
+                        { name: "KB Overhead Press", reps: "15 reps", notes: "Stand on one leg to add core challenge (switch halfway)." },
+                        { name: "Plank to Down Dog", reps: "10 reps", notes: "Plank position, push hips back to downward dog, return." },
+                        { name: "KB Windmills", reps: "8 each side", notes: "KB overhead, bend sideways. Advanced shoulder work!" }
+                    ],
+                    cooldown: "🧘 Cool-down (6 mins): Deep shoulder and chest stretches"
+                },
+                recovery: {
+                    title: "ACTIVE RECOVERY DAY",
+                    exercises: [
+                        { name: "Long walk", reps: "45-60 mins", notes: "Get outside. Enjoy it." },
+                        { name: "Full yoga session", reps: "30-40 mins", notes: "YouTube a flow class" },
+                        { name: "Mobility work", reps: "20 mins", notes: "Focus on hips and shoulders" }
+                    ]
+                }
+            },
+            4: {
+                title: "Week 4: Peak Performance",
+                schedule: "Lower → Upper → Lower → Upper → Lower → Upper → Active Recovery",
+                lower: {
+                    title: "LOWER BODY - Beast Mode",
+                    warmup: "🏋️ Warm-up (6 mins): Full dynamic warm-up + activation exercises",
+                    circuit: "5 rounds • 45 sec rest",
+                    exercises: [
+                        { name: "Single-leg Glute Bridges", reps: "20 each + 5s hold", notes: "Add KB on hips for extra resistance if you want!" },
+                        { name: "Cossack Squats", reps: "10 each side", notes: "Wide stance, shift weight side to side. Advanced!" },
+                        { name: "Single-leg KB Deadlifts", reps: "12 each", notes: "Full extension. Back leg straight out. Balance master." },
+                        { name: "Bulgarian Split Squats", reps: "12 each + 3s pause", notes: "Pause at bottom. This will burn!" },
+                        { name: "Goblet Squats - Full Depth", reps: "15 reps", notes: "As deep as comfortable. Slow and controlled." },
+                        { name: "KB Swings", reps: "15 reps", notes: "Hip hinge power! Swing to shoulder height. Only if knee feels great." }
+                    ],
+                    cooldown: "🧘 Cool-down (6 mins): Deep stretching, celebrate your strength!"
+                },
+                upper: {
+                    title: "UPPER BODY - Maximum Strength",
+                    warmup: "🏋️ Warm-up (6 mins): Full upper body mobility + light activation",
+                    circuit: "5 rounds • 40 sec rest",
+                    exercises: [
+                        { name: "KB Floor Press", reps: "20 reps", notes: "You're strong now! Push yourself." },
+                        { name: "KB Rows", reps: "18 each", notes: "Perfect form. Control the eccentric." },
+                        { name: "Push-ups - Advanced", reps: "15-20 reps", notes: "Decline on mat roll, archer push-ups, or standard done right." },
+                        { name: "KB Overhead Press", reps: "15 reps", notes: "Standing. Engage everything. Full ROM." },
+                        { name: "Plank Series", reps: "60 seconds total", notes: "20s hold, 10s shoulder taps, 20s hold, 10s hip dips." },
+                        { name: "KB Turkish Get-Up", reps: "3 each side", notes: "Slow, controlled, full body movement. YouTube the form!" }
+                    ],
+                    cooldown: "🧘 Cool-down (6 mins): Full body stretch, you earned this!"
+                },
+                recovery: {
+                    title: "ACTIVE RECOVERY DAY - Reflect & Recover",
+                    exercises: [
+                        { name: "Your choice of movement", reps: "30-60 mins", notes: "Walk, yoga, swim, bike - whatever feels good" },
+                        { name: "Reflect on progress", reps: "10 mins", notes: "How much stronger do you feel vs Week 1?" },
+                        { name: "Plan Week 5+", reps: "", notes: "Repeat Week 4 or design your own progression!" }
+                    ]
+                }
+            }
+        };
+        
+        const weeks = {
+            1: {
+                title: "Week 1: Awareness & Small Cuts",
+                goals: [
+                    {
+                        title: "☕ Caffeine Goal",
+                        text: "Cut down to 5-6 cups of tea maximum. No tea after 3pm."
+                    },
+                    {
+                        title: "🛏️ Sleep Goal",
+                        text: "Aim for bed by 12:30am (30 mins earlier). Set a 12:00am 'wind down' alarm."
+                    },
+                    {
+                        title: "⏰ Wake Goal",
+                        text: "Try to wake at 8:30am consistently (pick one time, even on weekends)"
+                    }
+                ],
+                tips: [
+                    "Track every cup of tea you drink - awareness is half the battle",
+                    "Replace late afternoon tea with herbal tea or water",
+                    "Put your phone on charge outside your bedroom at midnight",
+                    "If you slip up, don't restart - just get back on track the next day"
+                ]
+            },
+            2: {
+                title: "Week 2: Building Momentum",
+                goals: [
+                    {
+                        title: "☕ Caffeine Goal",
+                        text: "Reduce to 4-5 cups of tea. No tea after 2pm."
+                    },
+                    {
+                        title: "🛏️ Sleep Goal",
+                        text: "Bed by midnight. Start a 20-minute wind-down routine at 11:40pm."
+                    },
+                    {
+                        title: "⏰ Wake Goal",
+                        text: "Wake at 8am consistently. Use an alarm, and get up when it rings."
+                    }
+                ],
+                tips: [
+                    "You might feel tired this week - that's your body adjusting. Power through!",
+                    "Try a short 10-minute walk in the morning to wake up naturally",
+                    "Keep decaf tea or herbal options handy for afternoon cravings",
+                    "If you're struggling with the cutoff time, dilute your last cup of tea"
+                ]
+            },
+            3: {
+                title: "Week 3: The Sweet Spot",
+                goals: [
+                    {
+                        title: "☕ Caffeine Goal",
+                        text: "Down to 3-4 cups of tea. No tea after 1pm."
+                    },
+                    {
+                        title: "🛏️ Sleep Goal",
+                        text: "Bed by 11:30pm. Wind down routine starts at 11:10pm."
+                    },
+                    {
+                        title: "⏰ Wake Goal",
+                        text: "Wake at 7:30am. You should be getting 8 hours now!"
+                    }
+                ],
+                tips: [
+                    "You should start feeling better rested - notice the difference!",
+                    "Celebrate your progress! You've made real changes.",
+                    "Front-load your tea - have most of it before noon",
+                    "If you need an afternoon boost, try a 15-minute power nap instead"
+                ]
+            },
+            4: {
+                title: "Week 4: Sustainable Habits",
+                goals: [
+                    {
+                        title: "☕ Caffeine Goal",
+                        text: "2-3 cups of tea, all before noon. This is your sustainable level!"
+                    },
+                    {
+                        title: "🛏️ Sleep Goal",
+                        text: "Bed by 11pm. You're a morning person now!"
+                    },
+                    {
+                        title: "⏰ Wake Goal",
+                        text: "Wake at 7am feeling actually refreshed."
+                    }
+                ],
+                tips: [
+                    "This is your new normal - you've broken the cycle!",
+                    "Plan how you'll maintain this when life gets chaotic",
+                    "You can have flexibility, but keep the caffeine cutoff sacred",
+                    "Share what worked with someone else trying to improve their habits"
+                ]
+            }
+        };
+        
+        let currentWeek = 1;
+        let completedDays = JSON.parse(localStorage.getItem('completedDays') || '{}');
+        let exerciseDays = JSON.parse(localStorage.getItem('exerciseDays') || '{}');
+        
+        function showWeek(week) {
+            currentWeek = week;
+            document.querySelectorAll('.week-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            const weekData = weeks[week];
+            const content = document.getElementById('weekContent');
+            
+            let goalsHTML = '<div class="goals-section"><h2 style="margin-bottom: 20px;">This Week\'s Goals</h2>';
+            weekData.goals.forEach(goal => {
+                goalsHTML += `
+                    <div class="goal-item">
+                        <h3>${goal.title}</h3>
+                        <p>${goal.text}</p>
+                    </div>
+                `;
+            });
+            goalsHTML += '</div>';
+            
+            content.innerHTML = goalsHTML;
+            
+            const tipsEl = document.getElementById('weekTips');
+            tipsEl.innerHTML = weekData.tips.map(tip => `<li>${tip}</li>`).join('');
+            
+            renderTracker();
+            renderExerciseTracker();
+            renderWorkoutPlan();
+            updateStats();
+        }
+        
+        function renderWorkoutPlan() {
+            const workout = workouts[currentWeek];
+            const planEl = document.getElementById('workoutPlan');
+            
+            let lowerHTML = '';
+            workout.lower.exercises.forEach((ex, i) => {
+                lowerHTML += `<strong>${i + 1}. ${ex.name}</strong> (${ex.reps})<br>${ex.notes}<br><br>`;
+            });
+            
+            let upperHTML = '';
+            workout.upper.exercises.forEach((ex, i) => {
+                upperHTML += `<strong>${i + 1}. ${ex.name}</strong> (${ex.reps})<br>${ex.notes}<br><br>`;
+            });
+            
+            let recoveryHTML = '';
+            workout.recovery.exercises.forEach((ex, i) => {
+                recoveryHTML += `<strong>${i + 1}. ${ex.name}</strong> (${ex.reps})<br>${ex.notes}<br><br>`;
+            });
+            
+            planEl.innerHTML = `
+                <h2 style="margin-bottom: 10px;">${workout.title}</h2>
+                <p style="color: #718096; margin-bottom: 25px; font-size: 1.1em;"><strong>Weekly Schedule:</strong> ${workout.schedule}</p>
+                
+                <div class="goal-item" style="border-left-color: #48bb78;">
+                    <h3>💪 ${workout.lower.title}</h3>
+                    <p><em>Days 1, 3, 5 (Sat, Mon, Wed)</em></p>
+                    <p style="margin-top: 15px;"><strong>Warm-up:</strong> ${workout.lower.warmup}</p>
+                    <p style="margin-top: 10px;"><strong>Workout:</strong> ${workout.lower.circuit}</p>
+                    <p style="margin-top: 15px;">${lowerHTML}</p>
+                    <p><strong>Cool-down:</strong> ${workout.lower.cooldown}</p>
+                </div>
+                
+                <div class="goal-item" style="border-left-color: #667eea;">
+                    <h3>💪 ${workout.upper.title}</h3>
+                    <p><em>Days 2, 4, 6 (Sun, Tue, Thu)</em></p>
+                    <p style="margin-top: 15px;"><strong>Warm-up:</strong> ${workout.upper.warmup}</p>
+                    <p style="margin-top: 10px;"><strong>Workout:</strong> ${workout.upper.circuit}</p>
+                    <p style="margin-top: 15px;">${upperHTML}</p>
+                    <p><strong>Cool-down:</strong> ${workout.upper.cooldown}</p>
+                </div>
+                
+                <div class="goal-item" style="border-left-color: #ed8936;">
+                    <h3>🧘 ${workout.recovery.title}</h3>
+                    <p><em>Day 7 (Friday) - Let your body repair!</em></p>
+                    <p style="margin-top: 15px;">${recoveryHTML}</p>
+                </div>
+                
+                <div class="goal-item" style="border-left-color: #f56565; background: #fff5f5;">
+                    <h3>⚠️ Training Smart</h3>
+                    <p>• <strong>Knee pain?</strong> Sharp pain = stop immediately. Dull burn = normal muscle fatigue<br>
+                    • <strong>Form over reps:</strong> Better to do 8 perfect reps than 15 sloppy ones<br>
+                    • <strong>Listen to your body:</strong> Sore is OK. Injured is not. Take an extra rest day if needed<br>
+                    • <strong>Fuel properly:</strong> Eat enough protein and sleep well - that's when you get stronger<br>
+                    • <strong>Progressive overload:</strong> Only move to next week when current week feels manageable</p>
+                </div>
+            `;
+        }
+        
+        function renderExerciseTracker() {
+            const grid = document.getElementById('exerciseGrid');
+            const days = ['Sat', 'Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri'];
+            
+            grid.innerHTML = days.map((day, index) => {
+                const dayKey = `week${currentWeek}-exercise${index + 1}`;
+                const isCompleted = exerciseDays[dayKey];
+                
+                return `
+                    <div class="day-box ${isCompleted ? 'completed' : ''}" onclick="toggleExercise('${dayKey}')">
+                        <div class="day-label">${day}</div>
+                        <div class="day-number">${index + 1}</div>
+                    </div>
+                `;
+            }).join('');
+        }
+        
+        function toggleExercise(dayKey) {
+            if (exerciseDays[dayKey]) {
+                delete exerciseDays[dayKey];
+            } else {
+                exerciseDays[dayKey] = true;
+            }
+            localStorage.setItem('exerciseDays', JSON.stringify(exerciseDays));
+            renderExerciseTracker();
+        }
+        
+        function renderTracker() {
+            const grid = document.getElementById('trackerGrid');
+            const days = ['Sat', 'Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri'];
+            
+            grid.innerHTML = days.map((day, index) => {
+                const dayKey = `week${currentWeek}-day${index + 1}`;
+                const isCompleted = completedDays[dayKey];
+                
+                return `
+                    <div class="day-box ${isCompleted ? 'completed' : ''}" onclick="toggleDay('${dayKey}')">
+                        <div class="day-label">${day}</div>
+                        <div class="day-number">${index + 1}</div>
+                    </div>
+                `;
+            }).join('');
+        }
+        
+        function toggleDay(dayKey) {
+            if (completedDays[dayKey]) {
+                delete completedDays[dayKey];
+            } else {
+                completedDays[dayKey] = true;
+            }
+            localStorage.setItem('completedDays', JSON.stringify(completedDays));
+            renderTracker();
+            updateStats();
+        }
+        
+        function updateStats() {
+            const total = Object.keys(completedDays).length;
+            document.getElementById('completedDays').textContent = total;
+            
+            const weekKeys = Array.from({length: 7}, (_, i) => `week${currentWeek}-day${i + 1}`);
+            const weekCompleted = weekKeys.filter(key => completedDays[key]).length;
+            document.getElementById('weekProgress').textContent = Math.round((weekCompleted / 7) * 100) + '%';
+            
+            let streak = 0;
+            for (let w = 1; w <= 4; w++) {
+                for (let d = 1; d <= 7; d++) {
+                    if (completedDays[`week${w}-day${d}`]) {
+                        streak++;
+                    } else if (w < currentWeek || (w === currentWeek && d <= new Date().getDay())) {
+                        streak = 0;
+                    }
+                }
+            }
+            document.getElementById('currentStreak').textContent = streak;
+            
+            const totalPossible = 28;
+            const percentage = Math.round((total / totalPossible) * 100);
+            const progressBar = document.getElementById('progressBar');
+            progressBar.style.width = percentage + '%';
+            progressBar.textContent = percentage + '%';
+        }
+        
+        showWeek(1);
+        renderExerciseTracker();
+    </script>
+</body>
+</html>
