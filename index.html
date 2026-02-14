@@ -542,8 +542,27 @@
     </div>
     
     <script>
+        // Migration: Check if user has old data but no start date set
+        function migrateOldData() {
+            const hasOldData = localStorage.getItem('completedDays') || 
+                              localStorage.getItem('exerciseDays') || 
+                              localStorage.getItem('testResults');
+            
+            const hasStartDate = localStorage.getItem('programStartDate');
+            
+            if (hasOldData && !hasStartDate) {
+                // User has old data but no start date - migrate from old fixed date
+                const oldStartDate = new Date('2026-02-07T00:00:00');
+                localStorage.setItem('programStartDate', oldStartDate.toISOString());
+                console.log('Migrated old progress data with start date:', oldStartDate);
+                return oldStartDate;
+            }
+            
+            return hasStartDate ? new Date(hasStartDate) : null;
+        }
+        
         // Date management - Program starts when you do your first test
-        let startDate = localStorage.getItem('programStartDate') ? new Date(localStorage.getItem('programStartDate')) : null;
+        let startDate = migrateOldData();
         let currentViewDate = new Date();
         
         // Calculate which day of the program we're on
