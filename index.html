@@ -230,6 +230,88 @@
             margin-top: 5px;
             font-size: 0.9em;
         }
+        
+        /* Date Navigation Styles */
+        .date-nav {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            border: 2px solid #e2e8f0;
+        }
+        
+        .date-nav button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+        
+        .date-nav button:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+        }
+        
+        .date-nav button:disabled {
+            background: #cbd5e0;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .current-date {
+            text-align: center;
+            flex: 1;
+        }
+        
+        .current-date h2 {
+            color: #2d3748;
+            margin-bottom: 5px;
+        }
+        
+        .current-date p {
+            color: #718096;
+            font-size: 0.9em;
+        }
+        
+        .today-badge {
+            background: #48bb78;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            margin-left: 10px;
+            font-weight: 600;
+        }
+        
+        .today-plan {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 25px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+        }
+        
+        .today-plan h2 {
+            margin-bottom: 15px;
+        }
+        
+        .today-plan h3 {
+            margin-top: 20px;
+            margin-bottom: 10px;
+        }
+        
+        .today-plan ul {
+            margin-left: 20px;
+            line-height: 1.8;
+        }
 
         /* Test Day Styles */
         .test-day-section {
@@ -352,11 +434,30 @@
         <h1>🌙 Break the Caffeine-Sleep Cycle</h1>
         <p class="subtitle">Your 4-week journey to better sleep and sustainable energy</p>
         
+        <!-- Date Navigation -->
+        <div class="date-nav">
+            <button onclick="changeDay(-1)">← Previous Day</button>
+            <div class="current-date">
+                <h2 id="currentDateDisplay">Loading...</h2>
+                <p id="dayTypeDisplay">Day 1 of 28</p>
+            </div>
+            <button onclick="changeDay(1)">Next Day →</button>
+        </div>
+        
+        <div style="text-align: center; margin-bottom: 20px;">
+            <button onclick="goToToday()" style="background: #48bb78; color: white; border: none; padding: 10px 30px; border-radius: 10px; cursor: pointer; font-weight: 600;">Jump to Today</button>
+        </div>
+        
+        <!-- Today's Plan -->
+        <div class="today-plan" id="todayPlan">
+            <!-- Today's workout and goals will be inserted here -->
+        </div>
+        
         <div class="week-selector">
-            <button class="week-btn active" onclick="showWeek(1)">Week 1</button>
-            <button class="week-btn" onclick="showWeek(2)">Week 2</button>
-            <button class="week-btn" onclick="showWeek(3)">Week 3</button>
-            <button class="week-btn" onclick="showWeek(4)">Week 4</button>
+            <button class="week-btn active" onclick="showWeek(1, false)">Week 1</button>
+            <button class="week-btn" onclick="showWeek(2, false)">Week 2</button>
+            <button class="week-btn" onclick="showWeek(3, false)">Week 3</button>
+            <button class="week-btn" onclick="showWeek(4, false)">Week 4</button>
         </div>
         
         <div class="progress-bar">
@@ -386,15 +487,15 @@
         </div>
         
         <div class="tracker-section" style="margin-top: 40px;">
-            <h2 style="margin-bottom: 15px;">Exercise Tracker - Daily Workouts</h2>
-            <p style="color: #718096; margin-bottom: 15px;">Alternate between lower body (knee strengthening) and upper body days. Saturdays are TEST DAYS! 🏆</p>
+            <h2 style="margin-bottom: 15px;">Exercise Tracker - 7-Day Cycles</h2>
+            <p style="color: #718096; margin-bottom: 15px;">Each cycle: Test → Lower → Upper → Lower → Upper → Rest → Test. Complete all days! 🏆</p>
             <div class="tracker-grid" id="exerciseGrid"></div>
         </div>
         
         <!-- Test Day Section -->
-        <div class="test-day-section" id="testDaySection" style="display: none;">
+        <div class="test-day-section" id="testDaySection">
             <h2>🏆 Saturday Test Day - Week <span id="testWeekNumber">1</span></h2>
-            <p style="margin-bottom: 20px;">Record your max reps/time for each exercise. This is your baseline for tracking progress!</p>
+            <p style="margin-bottom: 20px;">Record your max reps/time for each exercise. Track your progress week by week!</p>
             
             <div class="test-input-grid">
                 <div class="test-input-item">
@@ -441,6 +542,204 @@
     </div>
     
     <script>
+        // Date management - Program starts when you do your first test
+        let startDate = localStorage.getItem('programStartDate') ? new Date(localStorage.getItem('programStartDate')) : null;
+        let currentViewDate = new Date();
+        
+        // Calculate which day of the program we're on
+        function getDayNumber(date) {
+            if (!startDate) return 0; // No program started yet
+            
+            const start = new Date(startDate);
+            const current = new Date(date);
+            start.setHours(0, 0, 0, 0);
+            current.setHours(0, 0, 0, 0);
+            
+            const diffTime = current - start;
+            const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+            return diffDays + 1; // Day 1-based
+        }
+        
+        function getWeekAndDay(dayNumber) {
+            // Week is determined by which test cycle we're in (every 7 days)
+            const week = Math.ceil(dayNumber / 7);
+            const dayOfWeek = ((dayNumber - 1) % 7) + 1;
+            return { week: Math.min(week, 4), dayOfWeek };
+        }
+        
+        function setStartDate() {
+            // Called when user completes their first test
+            if (!startDate) {
+                startDate = new Date();
+                startDate.setHours(0, 0, 0, 0);
+                localStorage.setItem('programStartDate', startDate.toISOString());
+                updateDailyView();
+                alert('🎉 Program started! Day 1 is today. Come back tomorrow for your first workout!');
+            }
+        }
+        
+        function resetProgram() {
+            if (confirm('Are you sure you want to reset the program? This will clear your start date and all progress.')) {
+                localStorage.removeItem('programStartDate');
+                startDate = null;
+                updateDailyView();
+            }
+        }
+        
+        function changeDay(delta) {
+            currentViewDate.setDate(currentViewDate.getDate() + delta);
+            updateDailyView();
+        }
+        
+        function goToToday() {
+            currentViewDate = new Date();
+            updateDailyView();
+        }
+        
+        function updateDailyView() {
+            if (!startDate) {
+                // Program not started yet
+                document.getElementById('currentDateDisplay').innerHTML = 'Program Not Started';
+                document.getElementById('dayTypeDisplay').textContent = 'Complete your first test to begin!';
+                document.getElementById('todayPlan').innerHTML = `
+                    <h2>Welcome! 👋</h2>
+                    <p>Ready to start your 4-week transformation? Here's how it works:</p>
+                    <ul>
+                        <li><strong>Day 1:</strong> Complete your baseline test (scroll down to record results)</li>
+                        <li><strong>Days 2-5:</strong> Follow the workout plan</li>
+                        <li><strong>Day 6:</strong> Active recovery</li>
+                        <li><strong>Day 7:</strong> Test again and see your progress!</li>
+                    </ul>
+                    <p style="margin-top: 20px;">When you're ready, complete the test below and click "Start Program" to begin!</p>
+                    <button onclick="setStartDate()" style="background: #48bb78; color: white; border: none; padding: 15px 40px; border-radius: 10px; cursor: pointer; font-weight: 600; font-size: 1.1em; margin-top: 10px;">🚀 Start Program</button>
+                `;
+                return;
+            }
+            
+            const dayNumber = getDayNumber(currentViewDate);
+            const { week, dayOfWeek } = getWeekAndDay(dayNumber);
+            
+            // Update date display
+            const dateDisplay = document.getElementById('currentDateDisplay');
+            const dayTypeDisplay = document.getElementById('dayTypeDisplay');
+            
+            const isToday = currentViewDate.toDateString() === new Date().toDateString();
+            const todayBadge = isToday ? '<span class="today-badge">TODAY</span>' : '';
+            
+            const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+            dateDisplay.innerHTML = currentViewDate.toLocaleDateString('en-GB', options) + todayBadge;
+            
+            if (dayNumber < 1) {
+                dayTypeDisplay.textContent = 'Before program start';
+            } else if (dayNumber > 28) {
+                dayTypeDisplay.textContent = 'Program complete! 🎉';
+            } else {
+                const dayNames = ['Test Day', 'Lower Body', 'Upper Body', 'Lower Body', 'Upper Body', 'Rest Day', 'Test Day'];
+                dayTypeDisplay.textContent = `Day ${dayNumber} - Week ${week}, ${dayNames[dayOfWeek - 1]}`;
+            }
+            
+            // Show today's plan
+            renderTodayPlan(week, dayOfWeek, dayNumber);
+            
+            // Update current week view
+            currentWeek = week;
+            showWeek(week, true);
+        }
+        
+        function renderTodayPlan(week, dayOfWeek, dayNumber) {
+            const planEl = document.getElementById('todayPlan');
+            
+            if (!startDate) {
+                return; // Already handled in updateDailyView
+            }
+            
+            if (dayNumber < 1 || dayNumber > 28) {
+                planEl.innerHTML = '<h2>No plan for this date</h2>';
+                return;
+            }
+            
+            // Ensure week is valid
+            const validWeek = Math.max(1, Math.min(4, week));
+            const weekData = weeks[validWeek];
+            const workoutData = workouts[validWeek];
+            
+            if (!weekData || !workoutData) {
+                planEl.innerHTML = '<h2>Week data not found</h2>';
+                console.error('Missing data for week:', validWeek);
+                return;
+            }
+            
+            let workoutType = '';
+            let workoutPlan = '';
+            
+            // New cycle structure: Day 1 = Test, 2 = Lower, 3 = Upper, 4 = Lower, 5 = Upper, 6 = Rest, 7 = Test
+            if (dayOfWeek === 1 || dayOfWeek === 7) {
+                // Test days
+                const testNumber = Math.floor((dayNumber + 6) / 7); // Which test this is (1, 2, 3, 4)
+                workoutType = dayOfWeek === 1 ? '🏆 TEST DAY - Baseline' : `🏆 TEST DAY - Week ${validWeek} Progress Check`;
+                workoutPlan = `
+                    <h3>Today's Mission: ${dayOfWeek === 1 ? 'Establish Your Baseline!' : 'Test Your Progress!'}</h3>
+                    <p>Perform max reps/time for each test exercise and record your results below.</p>
+                    <ul>
+                        <li>Push-ups (max reps)</li>
+                        <li>Wall Sit (max seconds)</li>
+                        <li>Glute Bridges (max reps)</li>
+                        <li>Plank Hold (max seconds)</li>
+                        <li>Goblet Squats (max reps)</li>
+                        <li>Balance - Eyes Closed (avg seconds)</li>
+                    </ul>
+                `;
+            } else if (dayOfWeek === 2 || dayOfWeek === 4) {
+                // Lower body days
+                workoutType = '💪 LOWER BODY';
+                const exercises = workoutData.lower.exercises.map(ex => 
+                    `<li><strong>${ex.name}</strong> - ${ex.reps}</li>`
+                ).join('');
+                workoutPlan = `
+                    <h3>${workoutData.lower.title}</h3>
+                    <p><strong>Warm-up:</strong> ${workoutData.lower.warmup}</p>
+                    <p><strong>Circuit:</strong> ${workoutData.lower.circuit}</p>
+                    <ul>${exercises}</ul>
+                    <p><strong>Cool-down:</strong> ${workoutData.lower.cooldown}</p>
+                `;
+            } else if (dayOfWeek === 3 || dayOfWeek === 5) {
+                // Upper body days
+                workoutType = '💪 UPPER BODY';
+                const exercises = workoutData.upper.exercises.map(ex => 
+                    `<li><strong>${ex.name}</strong> - ${ex.reps}</li>`
+                ).join('');
+                workoutPlan = `
+                    <h3>${workoutData.upper.title}</h3>
+                    <p><strong>Warm-up:</strong> ${workoutData.upper.warmup}</p>
+                    <p><strong>Circuit:</strong> ${workoutData.upper.circuit}</p>
+                    <ul>${exercises}</ul>
+                    <p><strong>Cool-down:</strong> ${workoutData.upper.cooldown}</p>
+                `;
+            } else if (dayOfWeek === 6) {
+                // Rest day
+                workoutType = '🧘 ACTIVE RECOVERY';
+                const exercises = workoutData.recovery.exercises.map(ex => 
+                    `<li><strong>${ex.name}</strong> - ${ex.reps}: ${ex.notes}</li>`
+                ).join('');
+                workoutPlan = `
+                    <h3>${workoutData.recovery.title}</h3>
+                    <ul>${exercises}</ul>
+                `;
+            }
+            
+            const goals = weekData.goals.map(g => 
+                `<li><strong>${g.title.split(' ')[0]}</strong> ${g.text}</li>`
+            ).join('');
+            
+            planEl.innerHTML = `
+                <h2>${workoutType}</h2>
+                ${workoutPlan}
+                <h3 style="margin-top: 25px;">Week ${validWeek} Habits</h3>
+                <ul>${goals}</ul>
+                <button onclick="resetProgram()" style="background: #f56565; color: white; border: none; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-size: 0.9em; margin-top: 15px;">Reset Program</button>
+            `;
+        }
+        
         const testExercises = [
             { id: 'pushups', name: 'Push-ups', unit: 'reps' },
             { id: 'wallsit', name: 'Wall Sit', unit: 'sec' },
@@ -453,7 +752,7 @@
         const workouts = {
             1: {
                 title: "Week 1: Building the Foundation",
-                schedule: "TEST → Lower → Upper → Lower → Upper → Lower → Recovery",
+                schedule: "TEST → Lower → Upper → Lower → Upper → Rest → TEST",
                 lower: {
                     title: "LOWER BODY - Knee Rehab Focus",
                     warmup: "🏋️ Warm-up (5 mins): Cat-cow (10) • Ankle circles (10 each) • Leg swings (10 each) • Hip circles (10 each)",
@@ -493,7 +792,7 @@
             },
             2: {
                 title: "Week 2: Adding Intensity",
-                schedule: "TEST → Lower → Upper → Lower → Upper → Lower → Recovery",
+                schedule: "TEST → Lower → Upper → Lower → Upper → Rest → TEST",
                 lower: {
                     title: "LOWER BODY - Progression",
                     warmup: "🏋️ Warm-up (5 mins): Cat-cow (10) • Ankle circles (10 each) • Dynamic leg swings all directions (10 each) • Hip circles (10 each) • 10 bodyweight squats",
@@ -533,7 +832,7 @@
             },
             3: {
                 title: "Week 3: Building Strength",
-                schedule: "TEST → Lower → Upper → Lower → Upper → Lower → Recovery",
+                schedule: "TEST → Lower → Upper → Lower → Upper → Rest → TEST",
                 lower: {
                     title: "LOWER BODY - Getting Strong",
                     warmup: "🏋️ Warm-up (6 mins): Full mobility flow + 10 squats + 5 lunges each side",
@@ -573,7 +872,7 @@
             },
             4: {
                 title: "Week 4: Peak Performance",
-                schedule: "TEST → Lower → Upper → Lower → Upper → Lower → Recovery",
+                schedule: "TEST → Lower → Upper → Lower → Upper → Rest → TEST",
                 lower: {
                     title: "LOWER BODY - Beast Mode",
                     warmup: "🏋️ Warm-up (6 mins): Full dynamic warm-up + activation exercises",
@@ -713,10 +1012,11 @@
         let exerciseDays = JSON.parse(localStorage.getItem('exerciseDays') || '{}');
         let testResults = JSON.parse(localStorage.getItem('testResults') || '{}');
         
-        function showWeek(week) {
+        function showWeek(week, skipDateUpdate = false) {
             currentWeek = week;
             document.querySelectorAll('.week-btn').forEach(btn => btn.classList.remove('active'));
-            event.target.classList.add('active');
+            const buttons = document.querySelectorAll('.week-btn');
+            if (buttons[week - 1]) buttons[week - 1].classList.add('active');
             
             const weekData = weeks[week];
             const content = document.getElementById('weekContent');
@@ -746,7 +1046,7 @@
         
         function renderTracker() {
             const grid = document.getElementById('trackerGrid');
-            const days = ['Sat', 'Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri'];
+            const days = ['Day 1', 'Day 2', 'Day 3', 'Day 4', 'Day 5', 'Day 6', 'Day 7'];
             
             grid.innerHTML = days.map((day, index) => {
                 const dayKey = `week${currentWeek}-day${index + 1}`;
@@ -774,15 +1074,15 @@
         
         function renderExerciseTracker() {
             const grid = document.getElementById('exerciseGrid');
-            const days = ['Sat', 'Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri'];
+            const days = ['Test', 'Lower', 'Upper', 'Lower', 'Upper', 'Rest', 'Test'];
             
             grid.innerHTML = days.map((day, index) => {
                 const dayKey = `week${currentWeek}-exercise${index + 1}`;
                 const isCompleted = exerciseDays[dayKey];
-                const isTestDay = index === 0; // Saturday
+                const isTestDay = index === 0 || index === 6;
                 
                 return `
-                    <div class="day-box ${isTestDay ? 'test-day' : ''} ${isCompleted ? 'completed' : ''}" onclick="toggleExercise('${dayKey}', ${index === 0})">
+                    <div class="day-box ${isTestDay ? 'test-day' : ''} ${isCompleted ? 'completed' : ''}" onclick="toggleExercise('${dayKey}', ${isTestDay})">
                         <div class="day-label">${day}${isTestDay ? ' 🏆' : ''}</div>
                         <div class="day-number">${index + 1}</div>
                     </div>
@@ -798,24 +1098,10 @@
             }
             localStorage.setItem('exerciseDays', JSON.stringify(exerciseDays));
             renderExerciseTracker();
-            
-            if (isTestDay) {
-                showTestDay();
-            }
         }
         
         function checkTestDay() {
-            const testDayKey = `week${currentWeek}-exercise1`;
-            if (exerciseDays[testDayKey]) {
-                showTestDay();
-            } else {
-                document.getElementById('testDaySection').style.display = 'none';
-            }
-        }
-        
-        function showTestDay() {
-            const testSection = document.getElementById('testDaySection');
-            testSection.style.display = 'block';
+            // Update the week number in test section
             document.getElementById('testWeekNumber').textContent = currentWeek;
             
             // Load existing test results for this week if they exist
@@ -829,7 +1115,7 @@
                 document.getElementById('test-squats').value = results.squats || '';
                 document.getElementById('test-balance').value = results.balance || '';
             } else {
-                // Clear inputs
+                // Clear inputs for new week
                 document.getElementById('test-pushups').value = '';
                 document.getElementById('test-wallsit').value = '';
                 document.getElementById('test-bridges').value = '';
@@ -938,14 +1224,14 @@
                 <p style="color: #718096; margin-bottom: 25px; font-size: 1.1em;"><strong>Weekly Schedule:</strong> ${workout.schedule}</p>
                 
                 <div class="goal-item" style="border-left-color: #ffa500; background: #fffaf0;">
-                    <h3>🏆 SATURDAY - TEST DAY</h3>
-                    <p><em>Record your baseline and track progress!</em></p>
-                    <p style="margin-top: 15px;">Perform max reps/time for: Push-ups, Wall Sit, Glute Bridges, Plank, Goblet Squats, and Balance (eyes closed). Check the Saturday box in Exercise Tracker to log your results!</p>
+                    <h3>🏆 DAY 1 & 7 - TEST DAYS</h3>
+                    <p><em>Start and end each cycle with progress testing!</em></p>
+                    <p style="margin-top: 15px;">Perform max reps/time for: Push-ups, Wall Sit, Glute Bridges, Plank, Goblet Squats, and Balance (eyes closed). Record results to track your gains!</p>
                 </div>
                 
                 <div class="goal-item" style="border-left-color: #48bb78;">
                     <h3>💪 ${workout.lower.title}</h3>
-                    <p><em>Days 2, 4, 6 (Sun, Tue, Thu) - 3x per week for knee strength!</em></p>
+                    <p><em>Days 2 & 4 - 2x per week lower body</em></p>
                     <p style="margin-top: 15px;"><strong>Warm-up:</strong> ${workout.lower.warmup}</p>
                     <p style="margin-top: 10px;"><strong>Workout:</strong> ${workout.lower.circuit}</p>
                     <p style="margin-top: 15px;">${lowerHTML}</p>
@@ -954,7 +1240,7 @@
                 
                 <div class="goal-item" style="border-left-color: #667eea;">
                     <h3>💪 ${workout.upper.title}</h3>
-                    <p><em>Days 3, 5 (Mon, Wed) - 2x per week upper body</em></p>
+                    <p><em>Days 3 & 5 - 2x per week upper body</em></p>
                     <p style="margin-top: 15px;"><strong>Warm-up:</strong> ${workout.upper.warmup}</p>
                     <p style="margin-top: 10px;"><strong>Workout:</strong> ${workout.upper.circuit}</p>
                     <p style="margin-top: 15px;">${upperHTML}</p>
@@ -963,7 +1249,7 @@
                 
                 <div class="goal-item" style="border-left-color: #ed8936;">
                     <h3>🧘 ${workout.recovery.title}</h3>
-                    <p><em>Day 7 (Friday) - Let your body repair!</em></p>
+                    <p><em>Day 6 - Let your body repair!</em></p>
                     <p style="margin-top: 15px;">${recoveryHTML}</p>
                 </div>
                 
@@ -1005,7 +1291,8 @@
             progressBar.textContent = percentage + '%';
         }
         
-        showWeek(1);
+        // Initialize app
+        updateDailyView();
         renderExerciseTracker();
     </script>
 </body>
