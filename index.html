@@ -488,7 +488,7 @@
         
         <div class="tracker-section" style="margin-top: 40px;">
             <h2 style="margin-bottom: 15px;">Exercise Tracker - 7-Day Cycles</h2>
-            <p style="color: #718096; margin-bottom: 15px;">Each cycle: Test → Lower → Upper → Lower → Upper → Rest → Test. Complete all days! 🏆</p>
+            <p style="color: #718096; margin-bottom: 15px;">Each cycle: Test → Lower → Upper → Lower → Upper → Lower → Rest. Track your progress! 🏆</p>
             <div class="tracker-grid" id="exerciseGrid"></div>
         </div>
         
@@ -622,12 +622,12 @@
                 document.getElementById('dayTypeDisplay').textContent = 'Complete your first test to begin!';
                 document.getElementById('todayPlan').innerHTML = `
                     <h2>Welcome! 👋</h2>
-                    <p>Ready to start your 4-week transformation? Here's how it works:</p>
+                    <p>Ready to start your 4-week transformation? Here's how each 7-day cycle works:</p>
                     <ul>
-                        <li><strong>Day 1:</strong> Complete your baseline test (scroll down to record results)</li>
-                        <li><strong>Days 2-5:</strong> Follow the workout plan</li>
-                        <li><strong>Day 6:</strong> Active recovery</li>
-                        <li><strong>Day 7:</strong> Test again and see your progress!</li>
+                        <li><strong>Day 1:</strong> Complete your test (scroll down to record results)</li>
+                        <li><strong>Days 2, 4, 6:</strong> Lower body workouts (knee strengthening)</li>
+                        <li><strong>Days 3, 5:</strong> Upper body workouts</li>
+                        <li><strong>Day 7:</strong> Active recovery - light movement only!</li>
                     </ul>
                     <p style="margin-top: 20px;">When you're ready, complete the test below and click "Start Program" to begin!</p>
                     <button onclick="setStartDate()" style="background: #48bb78; color: white; border: none; padding: 15px 40px; border-radius: 10px; cursor: pointer; font-weight: 600; font-size: 1.1em; margin-top: 10px;">🚀 Start Program</button>
@@ -650,10 +650,12 @@
             
             if (dayNumber < 1) {
                 dayTypeDisplay.textContent = 'Before program start';
-            } else if (dayNumber > 28) {
+            } else if (dayNumber === 29) {
+                dayTypeDisplay.textContent = 'Day 29 - FINAL TEST DAY! 🎉';
+            } else if (dayNumber > 29) {
                 dayTypeDisplay.textContent = 'Program complete! 🎉';
             } else {
-                const dayNames = ['Test Day', 'Lower Body', 'Upper Body', 'Lower Body', 'Upper Body', 'Rest Day', 'Test Day'];
+                const dayNames = ['Test Day', 'Lower Body', 'Upper Body', 'Lower Body', 'Upper Body', 'Lower Body', 'Rest Day'];
                 dayTypeDisplay.textContent = `Day ${dayNumber} - Week ${week}, ${dayNames[dayOfWeek - 1]}`;
             }
             
@@ -672,8 +674,32 @@
                 return; // Already handled in updateDailyView
             }
             
-            if (dayNumber < 1 || dayNumber > 28) {
+            if (dayNumber < 1) {
                 planEl.innerHTML = '<h2>No plan for this date</h2>';
+                return;
+            }
+            
+            // Day 29 - Final test
+            if (dayNumber === 29) {
+                planEl.innerHTML = `
+                    <h2>🎉 FINAL TEST DAY - Day 29</h2>
+                    <h3>Today's Mission: Celebrate Your Transformation!</h3>
+                    <p>You've completed 4 weeks of training. Time to see how far you've come!</p>
+                    <ul>
+                        <li>Push-ups (max reps)</li>
+                        <li>Wall Sit (max seconds)</li>
+                        <li>Glute Bridges (max reps)</li>
+                        <li>Plank Hold (max seconds)</li>
+                        <li>Goblet Squats (max reps)</li>
+                        <li>Balance - Eyes Closed (avg seconds)</li>
+                    </ul>
+                    <p style="margin-top: 20px;"><strong>After testing:</strong> Compare your results to Day 1. Look at how much you've improved! 💪</p>
+                `;
+                return;
+            }
+            
+            if (dayNumber > 29) {
+                planEl.innerHTML = '<h2>Program Complete! 🎉</h2><p>Congratulations on finishing the 4-week program. Check your progress table to see your gains!</p>';
                 return;
             }
             
@@ -691,13 +717,13 @@
             let workoutType = '';
             let workoutPlan = '';
             
-            // New cycle structure: Day 1 = Test, 2 = Lower, 3 = Upper, 4 = Lower, 5 = Upper, 6 = Rest, 7 = Test
-            if (dayOfWeek === 1 || dayOfWeek === 7) {
-                // Test days
-                const testNumber = Math.floor((dayNumber + 6) / 7); // Which test this is (1, 2, 3, 4)
-                workoutType = dayOfWeek === 1 ? '🏆 TEST DAY - Baseline' : `🏆 TEST DAY - Week ${validWeek} Progress Check`;
+            // New cycle structure: Day 1 = Test, 2 = Lower, 3 = Upper, 4 = Lower, 5 = Upper, 6 = Lower, 7 = Rest
+            if (dayOfWeek === 1) {
+                // Day 1 - Test day
+                const testNumber = Math.ceil(dayNumber / 7); // Which test this is (1, 2, 3, 4)
+                workoutType = testNumber === 1 ? '🏆 TEST DAY - Baseline' : `🏆 TEST DAY - Week ${validWeek} Progress Check`;
                 workoutPlan = `
-                    <h3>Today's Mission: ${dayOfWeek === 1 ? 'Establish Your Baseline!' : 'Test Your Progress!'}</h3>
+                    <h3>Today's Mission: ${testNumber === 1 ? 'Establish Your Baseline!' : 'Test Your Progress!'}</h3>
                     <p>Perform max reps/time for each test exercise and record your results below.</p>
                     <ul>
                         <li>Push-ups (max reps)</li>
@@ -708,8 +734,19 @@
                         <li>Balance - Eyes Closed (avg seconds)</li>
                     </ul>
                 `;
-            } else if (dayOfWeek === 2 || dayOfWeek === 4) {
-                // Lower body days
+            } else if (dayOfWeek === 7) {
+                // Day 7 - Rest/Recovery day
+                workoutType = '🧘 ACTIVE RECOVERY';
+                const exercises = workoutData.recovery.exercises.map(ex => 
+                    `<li><strong>${ex.name}</strong> - ${ex.reps}: ${ex.notes}</li>`
+                ).join('');
+                workoutPlan = `
+                    <h3>Recovery Day - Let Your Body Adapt</h3>
+                    <p>After a solid week of training, take it easy today. Light movement helps recovery.</p>
+                    <ul>${exercises}</ul>
+                `;
+            } else if (dayOfWeek === 2 || dayOfWeek === 4 || dayOfWeek === 6) {
+                // Lower body days - Days 2, 4, 6
                 workoutType = '💪 LOWER BODY';
                 const exercises = workoutData.lower.exercises.map(ex => 
                     `<li><strong>${ex.name}</strong> - ${ex.reps}</li>`
@@ -722,7 +759,7 @@
                     <p><strong>Cool-down:</strong> ${workoutData.lower.cooldown}</p>
                 `;
             } else if (dayOfWeek === 3 || dayOfWeek === 5) {
-                // Upper body days
+                // Upper body days - Days 3, 5
                 workoutType = '💪 UPPER BODY';
                 const exercises = workoutData.upper.exercises.map(ex => 
                     `<li><strong>${ex.name}</strong> - ${ex.reps}</li>`
@@ -733,16 +770,6 @@
                     <p><strong>Circuit:</strong> ${workoutData.upper.circuit}</p>
                     <ul>${exercises}</ul>
                     <p><strong>Cool-down:</strong> ${workoutData.upper.cooldown}</p>
-                `;
-            } else if (dayOfWeek === 6) {
-                // Rest day
-                workoutType = '🧘 ACTIVE RECOVERY';
-                const exercises = workoutData.recovery.exercises.map(ex => 
-                    `<li><strong>${ex.name}</strong> - ${ex.reps}: ${ex.notes}</li>`
-                ).join('');
-                workoutPlan = `
-                    <h3>${workoutData.recovery.title}</h3>
-                    <ul>${exercises}</ul>
                 `;
             }
             
@@ -771,7 +798,7 @@
         const workouts = {
             1: {
                 title: "Week 1: Building the Foundation",
-                schedule: "TEST → Lower → Upper → Lower → Upper → Rest → TEST",
+                schedule: "TEST → Lower → Upper → Lower → Upper → Lower → REST",
                 lower: {
                     title: "LOWER BODY - Knee Rehab Focus",
                     warmup: "🏋️ Warm-up (5 mins): Cat-cow (10) • Ankle circles (10 each) • Leg swings (10 each) • Hip circles (10 each)",
@@ -811,7 +838,7 @@
             },
             2: {
                 title: "Week 2: Adding Intensity",
-                schedule: "TEST → Lower → Upper → Lower → Upper → Rest → TEST",
+                schedule: "TEST → Lower → Upper → Lower → Upper → Lower → REST",
                 lower: {
                     title: "LOWER BODY - Progression",
                     warmup: "🏋️ Warm-up (5 mins): Cat-cow (10) • Ankle circles (10 each) • Dynamic leg swings all directions (10 each) • Hip circles (10 each) • 10 bodyweight squats",
@@ -851,7 +878,7 @@
             },
             3: {
                 title: "Week 3: Building Strength",
-                schedule: "TEST → Lower → Upper → Lower → Upper → Rest → TEST",
+                schedule: "TEST → Lower → Upper → Lower → Upper → Lower → REST",
                 lower: {
                     title: "LOWER BODY - Getting Strong",
                     warmup: "🏋️ Warm-up (6 mins): Full mobility flow + 10 squats + 5 lunges each side",
@@ -891,7 +918,7 @@
             },
             4: {
                 title: "Week 4: Peak Performance",
-                schedule: "TEST → Lower → Upper → Lower → Upper → Rest → TEST",
+                schedule: "TEST → Lower → Upper → Lower → Upper → Lower → REST",
                 lower: {
                     title: "LOWER BODY - Beast Mode",
                     warmup: "🏋️ Warm-up (6 mins): Full dynamic warm-up + activation exercises",
@@ -1093,12 +1120,12 @@
         
         function renderExerciseTracker() {
             const grid = document.getElementById('exerciseGrid');
-            const days = ['Test', 'Lower', 'Upper', 'Lower', 'Upper', 'Rest', 'Test'];
+            const days = ['Test', 'Lower', 'Upper', 'Lower', 'Upper', 'Lower', 'Rest'];
             
             grid.innerHTML = days.map((day, index) => {
                 const dayKey = `week${currentWeek}-exercise${index + 1}`;
                 const isCompleted = exerciseDays[dayKey];
-                const isTestDay = index === 0 || index === 6;
+                const isTestDay = index === 0; // Only Day 1 is test day
                 
                 return `
                     <div class="day-box ${isTestDay ? 'test-day' : ''} ${isCompleted ? 'completed' : ''}" onclick="toggleExercise('${dayKey}', ${isTestDay})">
@@ -1121,10 +1148,16 @@
         
         function checkTestDay() {
             // Update the week number in test section
-            document.getElementById('testWeekNumber').textContent = currentWeek;
+            const dayNumber = getDayNumber(currentViewDate);
+            
+            if (dayNumber === 29) {
+                document.getElementById('testWeekNumber').textContent = 'Final';
+            } else {
+                document.getElementById('testWeekNumber').textContent = currentWeek;
+            }
             
             // Load existing test results for this week if they exist
-            const weekKey = `week${currentWeek}`;
+            const weekKey = dayNumber === 29 ? 'final' : `week${currentWeek}`;
             if (testResults[weekKey]) {
                 const results = testResults[weekKey];
                 document.getElementById('test-pushups').value = results.pushups || '';
@@ -1147,7 +1180,9 @@
         }
         
         function saveTestResults() {
-            const weekKey = `week${currentWeek}`;
+            const dayNumber = getDayNumber(currentViewDate);
+            const weekKey = dayNumber === 29 ? 'final' : `week${currentWeek}`;
+            
             testResults[weekKey] = {
                 pushups: parseInt(document.getElementById('test-pushups').value) || 0,
                 wallsit: parseInt(document.getElementById('test-wallsit').value) || 0,
@@ -1178,7 +1213,11 @@
                     tableHTML += `<th>Week ${w}</th>`;
                 }
             }
-            tableHTML += '<th>Change</th></tr></thead><tbody>';
+            // Add final test column if it exists
+            if (testResults['final']) {
+                tableHTML += `<th>Final</th>`;
+            }
+            tableHTML += '<th>Total Change</th></tr></thead><tbody>';
             
             // Add rows for each exercise
             testExercises.forEach(exercise => {
@@ -1191,15 +1230,27 @@
                         const val = testResults[weekKey][exercise.id];
                         values.push(val);
                         
-                        // Check if this is a personal record
+                        // Check if this is a personal record (excluding final)
                         const isPR = val > 0 && values.every(v => val >= v);
-                        const prBadge = isPR && values.length > 1 ? '<span class="pr-badge">PR</span>' : '';
+                        const prBadge = isPR && values.length > 1 && !testResults['final'] ? '<span class="pr-badge">PR</span>' : '';
                         
                         tableHTML += `<td>${val} ${exercise.unit}${prBadge}</td>`;
                     }
                 }
                 
-                // Calculate improvement
+                // Add final test value if it exists
+                if (testResults['final']) {
+                    const finalVal = testResults['final'][exercise.id];
+                    values.push(finalVal);
+                    
+                    // Check if final is a PR
+                    const isPR = finalVal > 0 && values.every(v => finalVal >= v);
+                    const prBadge = isPR && values.length > 1 ? '<span class="pr-badge">PR</span>' : '';
+                    
+                    tableHTML += `<td>${finalVal} ${exercise.unit}${prBadge}</td>`;
+                }
+                
+                // Calculate improvement from first to last
                 if (values.length > 1) {
                     const first = values[0];
                     const last = values[values.length - 1];
@@ -1243,14 +1294,14 @@
                 <p style="color: #718096; margin-bottom: 25px; font-size: 1.1em;"><strong>Weekly Schedule:</strong> ${workout.schedule}</p>
                 
                 <div class="goal-item" style="border-left-color: #ffa500; background: #fffaf0;">
-                    <h3>🏆 DAY 1 & 7 - TEST DAYS</h3>
-                    <p><em>Start and end each cycle with progress testing!</em></p>
+                    <h3>🏆 DAY 1 - TEST DAY</h3>
+                    <p><em>Start each cycle by testing your progress!</em></p>
                     <p style="margin-top: 15px;">Perform max reps/time for: Push-ups, Wall Sit, Glute Bridges, Plank, Goblet Squats, and Balance (eyes closed). Record results to track your gains!</p>
                 </div>
                 
                 <div class="goal-item" style="border-left-color: #48bb78;">
                     <h3>💪 ${workout.lower.title}</h3>
-                    <p><em>Days 2 & 4 - 2x per week lower body</em></p>
+                    <p><em>Days 2, 4, 6 - 3x per week for knee strength!</em></p>
                     <p style="margin-top: 15px;"><strong>Warm-up:</strong> ${workout.lower.warmup}</p>
                     <p style="margin-top: 10px;"><strong>Workout:</strong> ${workout.lower.circuit}</p>
                     <p style="margin-top: 15px;">${lowerHTML}</p>
@@ -1259,7 +1310,7 @@
                 
                 <div class="goal-item" style="border-left-color: #667eea;">
                     <h3>💪 ${workout.upper.title}</h3>
-                    <p><em>Days 3 & 5 - 2x per week upper body</em></p>
+                    <p><em>Days 3, 5 - 2x per week upper body</em></p>
                     <p style="margin-top: 15px;"><strong>Warm-up:</strong> ${workout.upper.warmup}</p>
                     <p style="margin-top: 10px;"><strong>Workout:</strong> ${workout.upper.circuit}</p>
                     <p style="margin-top: 15px;">${upperHTML}</p>
@@ -1268,8 +1319,15 @@
                 
                 <div class="goal-item" style="border-left-color: #ed8936;">
                     <h3>🧘 ${workout.recovery.title}</h3>
-                    <p><em>Day 6 - Let your body repair!</em></p>
+                    <p><em>Day 7 - Let your body repair!</em></p>
                     <p style="margin-top: 15px;">${recoveryHTML}</p>
+                </div>
+                
+                <div class="goal-item" style="border-left-color: #f56565; background: #fff5f5;">
+                    <p style="margin-top: 15px;"><strong>Warm-up:</strong> ${workout.upper.warmup}</p>
+                    <p style="margin-top: 10px;"><strong>Workout:</strong> ${workout.upper.circuit}</p>
+                    <p style="margin-top: 15px;">${upperHTML}</p>
+                    <p><strong>Cool-down:</strong> ${workout.upper.cooldown}</p>
                 </div>
                 
                 <div class="goal-item" style="border-left-color: #f56565; background: #fff5f5;">
@@ -1301,9 +1359,13 @@
                     }
                 }
             }
+            // Check final test day
+            if (completedDays['final-test']) {
+                streak++;
+            }
             document.getElementById('currentStreak').textContent = streak;
             
-            const totalPossible = 28;
+            const totalPossible = 29; // 28 days + 1 final test
             const percentage = Math.round((total / totalPossible) * 100);
             const progressBar = document.getElementById('progressBar');
             progressBar.style.width = percentage + '%';
